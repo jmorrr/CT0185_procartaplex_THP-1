@@ -5,7 +5,7 @@ getwd()
 
 # expt_ID should be unique to the analysis e.g. 'CT0XXX_RNAseq'.
 # Preferably the name of the parent/working dir of the project.
-expt_ID <- "CT0166_RNAseq"
+expt_ID <- "CT0185"
 
 ### Directory creation
 
@@ -41,8 +41,7 @@ if(!file.exists(dir)){
 
 # A readme file for description of the project
 readme <- "README.md"
-# A file to list dependencies
-dependencies <- "dependencies.md"
+
 # A file to take analysis notes
 notes <- "notes.md"
 
@@ -61,7 +60,14 @@ if(!file.exists(fil)){
 }
 }
 
+# Define the lines you want to write
+lines <- c(".Rhistory", ".RData", ".Rproj.user/")
 
+# Write the lines to .gitignore, appending to the file
+writeLines(lines, ".gitignore", append = TRUE)
 
+renv::init()
+
+renv::snapshot()
 
 
