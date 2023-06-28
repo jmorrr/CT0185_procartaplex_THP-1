@@ -11,7 +11,35 @@ plate2 <- clean_data("CT0185__data/plate2_DD_corrected.xls")
 # Merge the plates
 merged_plates <- full_join(plate1, plate2, 
                            by=c("Sample", "Analyte", "concentration"), 
-                           suffix=c("_plate1", "_plate2")) %>%
+                           suffix=c("_plate1", "_plate2"))
+
+# Recode the analyte names
+merged_plates$Analyte <- recode(merged_plates$Analyte,
+                                "FGF-2" = "FGF-2 (gene = FGF2)",
+                                "CXCL11" = "CXCL11 (gene = CXCL11)",
+                                "IFN gamma" = "IFN gamma (gene = IFNG)",
+                                "IL-1 alpha" = "IL-1 alpha (gene = IL1A)",
+                                "IL-1 beta" = "IL-1 beta (gene = IL1B)",
+                                "IL-10" = "IL-10 (gene = IL10)",
+                                "IL-13" = "IL-13 (gene = IL13)",
+                                "IL-17A" = "IL-17A (gene = IL17A)",
+                                "IL-18" = "IL-18 (gene = IL18)",
+                                "IL-6" = "IL-6 (gene = IL6)",
+                                "IL-8" = "IL-8 (gene = CXCL8)",
+                                "IP-10" = "IP-10 (gene = CXCL10)",
+                                "MCP-1" = "MCP-1 (gene = CCL2)",
+                                "MIG" = "MIG (gene = CXCL9)",
+                                "MIP-1 alpha" = "MIP-1 alpha (gene = CCL3)",
+                                "MMP-1" = "MMP-1 (gene = MMP1)",
+                                "MMP-7" = "MMP-7 (gene = MMP7)",
+                                "MMP-9" = "MMP-9 (gene = MMP9)",
+                                "PDGF-BB" = "PDGF-BB (gene = PDGFB)",
+                                "SDF-1 alpha" = "SDF-1 alpha (gene = CXCL12)",
+                                "TNF alpha" = "TNF alpha (gene = TNF)",
+                                "VEGF-R2" = "VEGF-R2 (gene = KDR)")
+
+# Continue with the rest of the code...
+merged_plates <- merged_plates %>%
   mutate(time = recode(substr(Sample, 1, 1), "F" = "24H", "S" = "48H", "T" = "72H"),
          across(c("concentration", "FI_plate1", "FI - Bkgd_plate1", "FI_plate2", "FI - Bkgd_plate2"), as.numeric),
          Avg_FI_Bkgd = (`FI - Bkgd_plate1` + `FI - Bkgd_plate2`) / 2,
@@ -33,7 +61,7 @@ columns_to_keep <- c("Sample", "Analyte", "concentration", "FI_plate1", "FI - Bk
 merged_plates <- select(merged_plates, all_of(columns_to_keep))
 
 # Filter out undesired analytes
-remove_analytes <- c("CXCL11", "IFN gamma", "IL-13", "IL-6", "MIG", "PDGF-BB", "TNF alpha", "VEGF-R2")
+remove_analytes <- c("CXCL11", "IFNG", "IL13", "IL6", "CXCL9", "PDGFB", "TNF", "KDR")
 filtered_df <- merged_plates %>% filter(!Analyte %in% remove_analytes)
 
 # Function to create ggplots
@@ -45,9 +73,11 @@ create_plot <- function(data, x, y, color, ylab, file_name) {
          x = "Bleomycin Concentration [µg/ml]",
          y = ylab,
          color = color) +
-    theme_minimal()
+    theme_minimal() +
+    theme(strip.text = element_text(size = 8)) # adjusting facet label size
   
-  ggsave(file = file_name, plot = p, bg = "white")
+  
+  ggsave(file = file_name, plot = p, width = 10, height = 8, bg = "white")
 }
 
 # Function to create a summary dataframe
@@ -75,8 +105,10 @@ for (measurement in c('Avg_FI_Bkgd', 'Avg Obs Conc')) {
          x = "Bleomycin Concentration [µg/ml]",
          y = measurement,
          color = "time") +
-    theme_minimal()
+    theme_minimal() +
+    theme(strip.text = element_text(size = 6)) # adjusting facet label size
+  
   
   file_name = paste0("CT0185__results/Mean_StdDev_", gsub(" ", "_", measurement), ".png")
-  ggsave(file = file_name, plot = p, bg = "white")
+  ggsave(file = file_name, plot = p, width = 10, height = 8, bg = "white")
 }
